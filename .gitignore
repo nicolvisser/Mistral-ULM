@@ -1,0 +1,9 @@
+__pycache__
+.vscode/
+.venv/
+dist/
+poetry.lock
+wandb/
+checkpoints/
+submissions/
+*.sh

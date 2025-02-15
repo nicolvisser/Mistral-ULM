@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "ulm"
+version = "0.1.0"
+description = "Unit Language Model based on Mistral. Used for spoken language modeling."
+authors = ["nicolvisser <nicolvisser@yahoo.com>"]
+readme = "README.md"
+package-mode = true
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+torch = "^2.5.0"
+torchaudio = "^2.5.0"
+xformers = "^0.0.28.post2"
+simple-parsing = "^0.1.6"
+lightning = "^2.5.0"
+numpy = "^2.2.2"
+wandb = "^0.19.4"
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
