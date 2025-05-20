@@ -82,7 +82,7 @@ def compute_loglikelihoods(
 
     strings = [f"{key} {ll}" for key, ll in data]
     string = "\n".join(strings)
-    output_path.write_text(string)
+    Path(output_path).write_text(string)
 
 
 if __name__ == "__main__":

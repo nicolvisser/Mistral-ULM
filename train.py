@@ -10,11 +10,11 @@ from torch.utils.data import DataLoader
 import wandb
 from ulm import (
     LinearRampCosineDecayScheduler,
-    TransformerLightningModule,
     TransformerModel,
     TransformerModelArgs,
     collate_fn,
 )
+from ulm.trainer import TransformerLightningModule
 from ulm.units import (
     TokenizedUnitsChunkedDataset,
     TokenizedUnitsUtteranceDataset,
