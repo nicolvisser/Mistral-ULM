@@ -75,6 +75,21 @@ class TransformerModel(nn.Module):
 
         return self.output(self.norm(h)).float()
 
+    @torch.inference_mode()
+    def loglikelihood(self, ids: torch.Tensor) -> float:
+        assert ids.ndim == 1, "ids must be a 1D tensor"
+        device = ids.device
+        input_ids = ids[:-1].clone().to(device)
+        target_ids = ids[1:].clone().to(device)
+        logits = self.forward(input_ids, [len(input_ids)])
+        neg_obs_log_probs = torch.nn.functional.cross_entropy(
+            logits,
+            target_ids,
+            reduction="none",
+        )
+        ll = -neg_obs_log_probs.sum().item()
+        return ll
+
     def save_pretrained_checkpoint(
         self,
         checkpoint_path: str,
