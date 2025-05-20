@@ -61,7 +61,7 @@ def _lm_from_url(
     model.eval()
     num_params = sum(p.numel() for p in model.parameters())
     print(f"Loaded ULM model with {num_params:,} parameters.")
-    return model, tokenizer
+    return model
 
 
 def ulm_wavlm_layer_11_dpdp_hours_1k_steps_10k(
