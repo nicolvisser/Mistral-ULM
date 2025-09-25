@@ -11,10 +11,11 @@ from .tokenizer import UnitTokenizer
 
 
 class TokenizedUnitsDataset(Dataset):
-    def __init__(self, units_dir: str, pattern: str, tokenizer: UnitTokenizer):
+    def __init__(self, units_dir: str, pattern: str, tokenizer: UnitTokenizer, dedupe: bool = True):
         self.units_paths = sorted(list(Path(units_dir).glob(pattern)))
         assert len(self.units_paths) > 0, "No units found"
         self.tokenizer = tokenizer
+        self.dedupe = dedupe
 
     def __len__(self) -> int:
         return len(self.units_paths)
@@ -23,15 +24,16 @@ class TokenizedUnitsDataset(Dataset):
         units_path = self.units_paths[idx]
         chapter_id = units_path.parent.name
         units = np.load(self.units_paths[idx])
-        units_deduped = [k for k, _ in groupby(units)]
-        ids = self.tokenizer.encode(units_deduped)
+        ids = self.tokenizer.encode(units)
+        if self.dedupe:
+            ids = torch.unique_consecutive(ids)
         return chapter_id, ids
 
 
 class TokenizedUnitsUtteranceDataset(Dataset):
-    def __init__(self, units_dir: str, pattern: str, tokenizer: UnitTokenizer):
+    def __init__(self, units_dir: str, pattern: str, tokenizer: UnitTokenizer, dedupe: bool = True):
         self.dataset = TokenizedUnitsDataset(
-            units_dir=units_dir, pattern=pattern, tokenizer=tokenizer
+            units_dir=units_dir, pattern=pattern, tokenizer=tokenizer, dedupe=dedupe
         )
 
     def __len__(self) -> int:
@@ -49,9 +51,10 @@ class TokenizedUnitsChunkedDataset(Dataset):
         pattern: str,
         tokenizer: UnitTokenizer,
         max_chunk_size: int,
+        dedupe: bool = True
     ):
         self.dataset = TokenizedUnitsDataset(
-            units_dir=units_dir, pattern=pattern, tokenizer=tokenizer
+            units_dir=units_dir, pattern=pattern, tokenizer=tokenizer, dedupe=dedupe
         )
         self.chunk_size = max_chunk_size
 

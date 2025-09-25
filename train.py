@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import lightning.pytorch as pl
 import torch
@@ -57,6 +58,7 @@ class TrainArgs(Serializable):
     accumulate_grad_batches: int
     gradient_clip_algorithm: str
     gradient_clip_val: float
+    dedupe: Optional[bool] = True
 
 
 def train(
@@ -83,11 +85,13 @@ def train(
         pattern=train_args.train_dataset_pattern,
         tokenizer=tokenizer,
         max_chunk_size=train_args.chunk_size,
+        dedupe=train_args.dedupe,
     )
     valid_dataset = TokenizedUnitsUtteranceDataset(
         units_dir=train_args.valid_dataset_dir,
         pattern=train_args.valid_dataset_pattern,
         tokenizer=tokenizer,
+        dedupe=train_args.dedupe,
     )
 
     train_loader = DataLoader(

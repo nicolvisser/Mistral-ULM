@@ -11,9 +11,10 @@ from ulm.units.tokenizer import UnitTokenizer
 
 
 class EncodedEvalDataset(Dataset):
-    def __init__(self, data_dir: str, tokenizer: UnitTokenizer):
+    def __init__(self, data_dir: str, tokenizer: UnitTokenizer, dedupe: bool = True):
         self.units_paths = sorted(list(Path(data_dir).glob("*.npy")))
         self.tokenizer = tokenizer
+        self.dedupe = dedupe
 
     def __len__(self):
         return len(self.units_paths)
@@ -23,6 +24,8 @@ class EncodedEvalDataset(Dataset):
         key = path.stem
         units_npy = np.load(path)
         encoded_ids = self.tokenizer.encode(units_npy.tolist())
+        if self.dedupe:
+            encoded_ids = torch.unique_consecutive(encoded_ids)
         src_ids = encoded_ids[:-1].clone()
         tgt_ids = encoded_ids[1:].clone()
         return key, src_ids, tgt_ids
@@ -42,6 +45,7 @@ def compute_loglikelihoods(
     output_path: str,
     batch_size: int,
     num_workers: int,
+    dedupe: bool = True,
 ):
     model = TransformerModel.from_pretrained_checkpoint(checkpoint_path).cuda()
     model.eval()
@@ -49,10 +53,12 @@ def compute_loglikelihoods(
     tokenizer = UnitTokenizer()
 
     print(f"Computing loglikelihoods for units in {units_dir}...")
+    print(f"Dedupe? {dedupe}")
 
     dataset = EncodedEvalDataset(
         data_dir=units_dir,
         tokenizer=tokenizer,
+        dedupe=dedupe,
     )
 
     print(f"Found {len(dataset)} unit files")
@@ -117,6 +123,11 @@ if __name__ == "__main__":
         default=16,
         help="Number of workers for processing (default: 16)",
     )
+    parser.add_argument(
+        "--no-dedupe",
+        action="store_true",
+        help="Whether to deduplicate consecutive identical units (default: False)",
+    )
 
     args = parser.parse_args()
 
@@ -126,4 +137,5 @@ if __name__ == "__main__":
         output_path=args.output,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
+        dedupe=not args.no_dedupe
     )
