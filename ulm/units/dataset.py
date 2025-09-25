@@ -9,6 +9,20 @@ from torch.utils.data import Dataset
 from ..data import TokenizedItem
 from .tokenizer import UnitTokenizer
 
+def simulate_markov(N, pi_F=0.008, a=0.15):
+    rng = np.random.default_rng()
+    # Compute b from stationary equation
+    b = (pi_F * (1 - a)) / (1 - pi_F)
+
+    seq = np.empty(N, dtype=np.uint8)  # 1 = F, 0 = S
+    # initialize state according to stationary distribution
+    seq[0] = rng.random() < pi_F
+    for i in range(1, N):
+        if seq[i-1] == 1:
+            seq[i] = rng.random() < a
+        else:
+            seq[i] = rng.random() < b
+    return seq
 
 class TokenizedUnitsDataset(Dataset):
     def __init__(self, units_dir: str, pattern: str, tokenizer: UnitTokenizer, dedupe: bool = True):
@@ -24,6 +38,9 @@ class TokenizedUnitsDataset(Dataset):
         units_path = self.units_paths[idx]
         chapter_id = units_path.parent.name
         units = np.load(self.units_paths[idx])
+        random_mask = simulate_markov(len(units))
+        # set units to 0 where random_mask is 1
+        units = units * (1 - random_mask)
         ids = self.tokenizer.encode(units)
         if self.dedupe:
             ids = torch.unique_consecutive(ids)
